@@ -24,7 +24,7 @@ jobs:
         shell: bash
         run: |
           echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-  
+
       - uses: actions/cache@v3
         name: Setup pnpm cache
         with:
@@ -32,15 +32,27 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
-
       - name: Install dependencies
         run: pnpm install
 
+      - name: Install Cypress
+        run: |
+          npx cypress install
+
+      - name: Cache Cypress binary
+        if: success()
+        uses: actions/cache@v3
+        with:
+          path: /home/runner/.cache/Cypress
+          key: ${{ runner.os }}-cypress-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-cypress-
+
       - name: Cypress run
         uses: cypress-io/github-action@v6
-        env: 
+        env:
           APP_URL: "http://localhost:3000"
-          NEXT_PUBLIC_API_BASE_URL: "https://ignite-devstore-api.vercel.app"
+          NEXT_PUBLIC_API_BASE_URL: "https://devstore-api-amber.vercel.app"
         with:
           build: npm run build
           start: npm start
